@@ -8,14 +8,69 @@ from django.db.models import (
     TextField,
     ForeignKey,
     CASCADE,
-    BooleanField
+    BooleanField,
+    BigIntegerField,
+    OneToOneField
 )
 
 
 class Token(Model):
+    id = UUIDField(
+        default=uuid4,
+        help_text="Уникальный идентификатор ",
+        primary_key=True,
+        verbose_name="ID",
+    )
     token = TextField(
         help_text="Токен вэйфэир"
     )
+    created_at = DateTimeField(
+        auto_now_add=True,
+        help_text="Дата создания",
+        verbose_name="Дата создания",
+    )
+
+    class Meta:
+        db_table = "token"
+        verbose_name = "token"
+        verbose_name_plural = "token"
+        ordering = ["-created_at"]
+
+
+class User(Model):
+    id = UUIDField(
+        default=uuid4,
+        help_text="Уникальный идентификатор ",
+        primary_key=True,
+        verbose_name="ID",
+    )
+    telegram_id = BigIntegerField(
+        blank=True,
+        null=True,
+        help_text="Уникальный идентификатор TG",
+    )
+    created_at = DateTimeField(
+        auto_now_add=True,
+        help_text="Дата создания",
+        verbose_name="Дата создания",
+    )
+    tg_token = OneToOneField(
+        Token,
+        on_delete=CASCADE,
+        related_name='user',
+        help_text="Токен пользователя",
+        verbose_name="Токен",
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        db_table = "user"
+        verbose_name = "user"
+        verbose_name_plural = "user"
+        ordering = ["-created_at"]
+
+
 
 
 class Process(Model):
@@ -38,18 +93,9 @@ class Process(Model):
         help_text="Активность",
         default=True
     )
-    pc_token = ForeignKey(
-        Token,
-        verbose_name="Создатель",
-        on_delete=CASCADE,
-        null=True,
-        blank=True,
-        related_name='tokoken'
-    )
 
     class Meta:
         db_table = "process"
         verbose_name = "Процесс"
         verbose_name_plural = "Процесс"
         ordering = ["-created_at"]
-

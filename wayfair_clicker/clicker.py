@@ -122,7 +122,7 @@ def make_wayfair_request(chat_id):
     url = cnf("URL_WF", cast=str, default="https://www.wayfair.com/wayhome/graphql?queryHash=7632b54fcfa7cd10bec94e6cda6236bf&queryName=GetAvailableJobs")
     while True:
         try:
-                delay = random.uniform(0.5, 2)
+                delay = random.uniform(0.2, 1.2)
                 logger.info(f"Waiting {delay:.2f} seconds before request...")
                 time.sleep(delay)
                 response = requests.post(
@@ -153,9 +153,6 @@ def make_wayfair_request(chat_id):
                                 logger.info(f"No job_id - {job_id}")
                     else:
                         logger.info(f"No edges - {edges}")
-
-                    logger.info("\nResponse JSON:")
-                    logger.info(json.dumps(response.json(), indent=2))
                 else:
                     logger.info(f"\nError Response: {response.text}")
 
@@ -180,27 +177,40 @@ def claim_job(round_job_id, job_date, chat_id):
 
         if response.status_code == 200:
             resp = response.json()
-            data = resp.get("data", None)
-            pro = data.get("pro", None)
-            pro_job = pro.get("proJobRoundMutation", None)
-            job_change = pro_job.get("jobСhange", None)
-            status = job_change.get("status")
-
-            if status == "CONFIRMED":
-                send_telegram_message(
-                    message=f"Взят заказ с айди - {round_job_id} \n На дату - {job_date}",
-                    chat_id=chat_id
-                )
+            logger.info(f"1111Status Code: {resp}")
+            if errors := resp.get("errors", None):
+                for error in errors:
+                    if mess := error.get('message', None):
+                        send_telegram_message(
+                            message=f"{mess} - {round_job_id}",
+                            chat_id=chat_id
+                        )
             else:
-                logger.info(f"Fail status - {status}")
+                data = resp.get("data", None)
+                logger.info(f"1111Status Code: {data}")
 
-            logger.info("\nResponse JSON:")
-            logger.info(json.dumps(response.json(), indent=2))
+                pro = data.get("pro", None)
+                logger.info(f"1111Status Code: {pro}")
+
+                pro_job = pro.get("proJobRoundMutation", None)
+                logger.info(f"1111Status Code: {pro_job}")
+
+                job_change = pro_job.get("jobСhange", None)
+                status = job_change.get("status")
+                logger.info(f"1111Status Code: {status}")
+
+                if status == "CONFIRMED":
+                    send_telegram_message(
+                        message=f"Взят заказ с айди - {round_job_id} \n На дату - {job_date}",
+                        chat_id=chat_id
+                    )
+                else:
+                    logger.info(f"Fail status - {status}")
+
+                logger.info("\nResponse JSON:")
+                logger.info(json.dumps(response.json(), indent=2))
         else:
             logger.info(f"\nError Response: {response.text}")
-
-        return response
-
     except requests.exceptions.RequestException as e:
         logger.info(f"claim_job - Request failed: {e}")
 

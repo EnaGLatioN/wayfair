@@ -90,13 +90,21 @@ def get_job_details_request(round_job_id, chat_id):
             pro = data.get("pro", None)
             pro_job = pro.get("proJobRoundConnection", None)
             edges = pro_job.get("edges", None)
+            logger.info(f"+++++++++++++++++++get_job_details_request++++++++++++++++++++++++++")
             if edges:
                 for edge in edges:
-                    date_service = edge.get("desiredServiceDate", None)
-                    start_times = edge.get("timeWindow", None).get("startTimes")
-                    random_time = random.choice(start_times)
-                    result_string = f"{date_service} {random_time}.0000-0700"
-                    claim_job(round_job_id, result_string, chat_id)
+                    pro_job_round = edge.get("proJobRound", {})
+                    job_round = pro_job_round.get("jobRound", {})
+                    date_service = job_round.get("desiredServiceDate", None)
+                    time_window = job_round.get("timeWindow", {})
+                    start_times = time_window.get("startTimes", [])
+                    if date_service and start_times:
+                        random_time = random.choice(start_times)
+                        result_string = f"{date_service} {random_time}.0000-0700"
+                        logger.info(f"Date service: {date_service}")
+                        logger.info(f"Start times: {start_times}")
+                        logger.info(f"Result string: {result_string}")
+                        claim_job(round_job_id, result_string, chat_id)
             else:
                 logger.info(f"No edges - {edges}")
 
@@ -132,6 +140,10 @@ def make_wayfair_request(chat_id):
                     pro = data.get("pro", None)
                     pro_job = pro.get("proJobRoundConnection", None)
                     edges = pro_job.get("edges", None)
+                    logger.info(data)
+                    logger.info(pro)
+                    logger.info(pro_job)
+                    logger.info(edges)
                     if edges:
                         for edge in edges:
                             job_id = edge.get("proJobRound", None).get("id")
@@ -171,7 +183,7 @@ def claim_job(round_job_id, job_date, chat_id):
             data = resp.get("data", None)
             pro = data.get("pro", None)
             pro_job = pro.get("proJobRoundMutation", None)
-            job_change = pro_job.get("proJobRoundMutation", None)
+            job_change = pro_job.get("jobСhange", None)
             status = job_change.get("status")
 
             if status == "CONFIRMED":

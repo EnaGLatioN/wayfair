@@ -196,8 +196,6 @@ def claim_job(round_job_id, job_date, chat_id, token):
         else:
             logger.info(f"\nError Response: {response.text}")
 
-        return response
-
     except requests.exceptions.RequestException as e:
         logger.info(f"claim_job - Request failed: {e}")
 

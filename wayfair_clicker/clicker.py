@@ -82,7 +82,7 @@ def get_headers(token):
     }
 
 
-def get_job_details_request(round_job_id, chat_id):
+def get_job_details_request(round_job_id, chat_id, token):
     url = cnf("URL_DETAILS", cast=str, default="https://www.wayfair.com/wayhome/graphql?queryHash=8e4a959be82db19495a9a10ef59bb5eb&queryName=GetJobDetails")
 
     try:
@@ -107,7 +107,7 @@ def get_job_details_request(round_job_id, chat_id):
                     start_times = edge.get("timeWindow", None).get("startTimes")
                     random_time = random.choice(start_times)
                     result_string = f"{date_service} {random_time}.0000-0700"
-                    claim_job(round_job_id, result_string, chat_id)
+                    claim_job(round_job_id, result_string, chat_id, token)
             else:
                 logger.info(f"No edges - {edges}")
 
@@ -146,7 +146,7 @@ def make_wayfair_request(chat_id, token):
                     for edge in edges:
                         job_id = edge.get("proJobRound", None).get("id")
                         if job_id:
-                            get_job_details_request(job_id, chat_id)
+                            get_job_details_request(job_id, chat_id, token)
                         else:
                             logger.info(f"No job_id - {job_id}")
                 else:
@@ -162,14 +162,14 @@ def make_wayfair_request(chat_id, token):
 
 
 
-def claim_job(round_job_id, job_date, chat_id):
+def claim_job(round_job_id, job_date, chat_id, token):
     url = cnf("URL_WF", cast=str, default="https://www.wayfair.com/wayhome/graphql?queryHash=fece340532e4cbe86a4f41ce0afdd252&queryName=ClaimJobMutation")
 
     try:
         response = requests.post(
             url,
             json=get_claim_payload(round_job_id, job_date),
-            headers=get_headers(),
+            headers=get_headers(token),
             timeout=7
         )
 

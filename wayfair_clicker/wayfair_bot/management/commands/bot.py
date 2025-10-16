@@ -35,21 +35,143 @@ class Command(BaseCommand):
             """Главное меню бота"""
             user_id = message.from_user.id
             self.logger.info(f"USER ID пользователя: {user_id}")
-            User.objects.get_or_create(
-                telegram_id=user_id
-            )
+
+            user, created = User.objects.get_or_create(telegram_id=user_id)
+
+            # Создаем текстовый файл с шаблоном
+            template_content = f"""# Шаблон для заполнения токена и заголовков
+
+        token=your_token_here (Это пункт Authorization)
+        X_PX_OS_VERSION=18.6.2
+        Accept_Language=ru
+        X_PX_VID=61dcee5d-a14b-11f0-a7ad-7b2c41dbf4aa
+        Connection=keep-alive
+        Accept=application/json
+        X_PX_DEVICE_FP=DD6382DE-FC6A-4B59-B94E-F18334B1A71D
+        wf_customer_guid=AC84D264-98B4-4816-B77A-0E846B95E5EE
+        X_PX_HELLO=C1UKBwABVwEeUgoLAh4CAlUDHlIHBVIeVwQLUgUEA1VQVQZW
+        wf_pageview_id=UkRVMlJrRXdOVGd0UkVNeA==
+        X_PX_MOBILE_SDK_VERSION=3.2.5
+        X_Graph_Type=3
+        Content_Type=application/json
+        X_PX_AUTHORIZATION=your_px_authorization_here
+        User_Agent=WayhomeApp/20250910.12080 1.100.0 (iPhone; iOS 18.6.2; Scale/3.00)
+        wf_locale=en-US
+        X_PX_UUID=8f9432d2-a981-11f0-a46a-d78a670fcf5e
+        AppAuthEnabled=1
+        Authorization=your_bearer_token_here
+        Accept_Encoding=gzip, deflate, br
+        X_PX_DEVICE_MODEL=iPhone15,5
+        wf_device_guid=39B9B4BC-BAC5-4DD7-8412-0637CE162DB6
+        Host=www.wayfair.com
+        Cookie=your_cookie_here
+        X_PX_OS=iOS
+
+        # Заполните все поля своими значениями и отправьте файл обратно
+        """
+
+            # Создаем временный файл
+            with open("token_template.txt", "w", encoding="utf-8") as f:
+                f.write(template_content)
+
+            # Отправляем документ
+            with open("token_template.txt", "rb") as doc:
+                self.bot.send_document(
+                    message.chat.id,
+                    doc,
+                    caption="📄 Заполните этот шаблон и отправьте обратно"
+                )
+
             welcome_text = """
-                🤖 Добро пожаловать в Wayfair Bot!
-                
+        🤖 Добро пожаловать в Wayfair Bot!
+
         Доступные команды:
-        /token - Добавить новый токен
+        /token - Добавить новый токен (отправит шаблон для заполнения)
         /run - Запустить процесс с токеном
         /stop - Остановить активный процесс
         /status - Статус текущих процессов
         /help - Помощь по командам
         /new - Изменить токен
-            """
+
+        📝 Отправьте заполненный файл чтобы сохранить данные
+        """
             self.bot.reply_to(message, welcome_text)
+
+
+        @self.bot.message_handler(content_types=['document'])
+        def handle_document(message):
+            """Обработка полученного документа с данными"""
+            user_id = message.from_user.id
+
+            try:
+                # Получаем информацию о документе
+                file_info = self.bot.get_file(message.document.file_id)
+                downloaded_file = self.bot.download_file(file_info.file_path)
+
+                # Сохраняем временный файл
+                temp_filename = f"temp_{user_id}_{message.document.file_name}"
+                with open(temp_filename, 'wb') as new_file:
+                    new_file.write(downloaded_file)
+
+                # Парсим файл
+                token_data = parse_token_file(temp_filename)
+
+                # Сохраняем в базу
+                save_token_to_db(self, user_id, token_data)
+
+                # Удаляем временный файл
+                import os
+                os.remove(temp_filename)
+
+                self.bot.reply_to(message, "✅ Данные успешно сохранены!")
+
+            except Exception as e:
+                self.logger.error(f"Ошибка обработки документа: {e}")
+                self.bot.reply_to(message, "❌ Ошибка при обработке файла")
+
+        def parse_token_file(filename):
+            """Парсит файл с токенами"""
+            token_data = {}
+
+            with open(filename, 'r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    # Пропускаем пустые строки и комментарии
+                    if not line or line.startswith('#'):
+                        continue
+
+                    # Разделяем ключ и значение
+                    if '=' in line:
+                        key, value = line.split('=', 1)
+                        token_data[key.strip()] = value.strip()
+
+            return token_data
+
+        def save_token_to_db(self, user_id, token_data):
+            """Сохраняет данные токена в базу"""
+            try:
+                user = User.objects.get(telegram_id=user_id)
+
+                # Создаем или обновляем токен через связь tg_token
+                if user.tg_token:
+                    # Обновляем существующий токен
+                    token = user.tg_token
+                    for field, value in token_data.items():
+                        if hasattr(token, field):
+                            setattr(token, field, value)
+                    token.save()
+                else:
+                    # Создаем новый токен
+                    token = Token.objects.create(**token_data)
+                    user.tg_token = token
+                    user.save()
+
+                self.logger.info(f"Токен сохранен для user_id: {user_id}")
+                return token
+
+            except Exception as e:
+                self.logger.error(f"Ошибка сохранения токена: {e}")
+                raise
 
         @self.bot.message_handler(commands=['help'])
         def show_help(message):
@@ -252,7 +374,7 @@ class Command(BaseCommand):
                 active_process = subprocess.Popen(
                     [
                         "poetry", "run", "python", "clicker.py",
-                        "--token", token.token,
+                        "--token_id", token.id,
                         "--chat_id", str(chat_id)
                     ],
                     stdout=log_file,
@@ -283,9 +405,9 @@ class Command(BaseCommand):
 
     def start_bot(self):
         """Запуск polling бота"""
-        while True:
-            try:
-                self.bot.polling(none_stop=True)
-            except Exception as e:
-                self.stderr.write(f"Ошибка: {e}")
-                continue
+        # while True:
+        #     try:
+        self.bot.polling(none_stop=True)
+            # except Exception as e:
+            #     self.stderr.write(f"Ошибка: {e}")
+            #     continue

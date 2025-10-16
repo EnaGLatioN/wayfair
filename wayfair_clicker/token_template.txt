@@ -1,0 +1,30 @@
+# Шаблон для заполнения токена и заголовков
+
+        token=your_token_here (Это пункт Authorization)
+        X_PX_OS_VERSION=18.6.2
+        Accept_Language=ru
+        X_PX_VID=61dcee5d-a14b-11f0-a7ad-7b2c41dbf4aa
+        Connection=keep-alive
+        Accept=application/json
+        X_PX_DEVICE_FP=DD6382DE-FC6A-4B59-B94E-F18334B1A71D
+        wf_customer_guid=AC84D264-98B4-4816-B77A-0E846B95E5EE
+        X_PX_HELLO=C1UKBwABVwEeUgoLAh4CAlUDHlIHBVIeVwQLUgUEA1VQVQZW
+        wf_pageview_id=UkRVMlJrRXdOVGd0UkVNeA==
+        X_PX_MOBILE_SDK_VERSION=3.2.5
+        X_Graph_Type=3
+        Content_Type=application/json
+        X_PX_AUTHORIZATION=your_px_authorization_here
+        User_Agent=WayhomeApp/20250910.12080 1.100.0 (iPhone; iOS 18.6.2; Scale/3.00)
+        wf_locale=en-US
+        X_PX_UUID=8f9432d2-a981-11f0-a46a-d78a670fcf5e
+        AppAuthEnabled=1
+        Authorization=your_bearer_token_here
+        Accept_Encoding=gzip, deflate, br
+        X_PX_DEVICE_MODEL=iPhone15,5
+        wf_device_guid=39B9B4BC-BAC5-4DD7-8412-0637CE162DB6
+        Host=www.wayfair.com
+        Cookie=your_cookie_here
+        X_PX_OS=iOS
+
+        # Заполните все поля своими значениями и отправьте файл обратно
+        

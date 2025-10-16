@@ -106,50 +106,51 @@ def get_job_details_request(round_job_id, chat_id):
             logger.info(f"\nError Response: {response.text}")
             
     except requests.exceptions.RequestException as e:
-        logger.info(f"Request failed: {e}")
+        logger.info(f"get_job_details_request - Request failed: {e}")
         return None
 
 
 def make_wayfair_request(chat_id):
     url = cnf("URL_WF", cast=str, default="https://www.wayfair.com/wayhome/graphql?queryHash=7632b54fcfa7cd10bec94e6cda6236bf&queryName=GetAvailableJobs")
-    try:
-        while True:
-            delay = random.uniform(0.5, 3)
-            logger.info(f"Waiting {delay:.2f} seconds before request...")
-            time.sleep(delay)
-            response = requests.post(
-                url,
-                json=get_job_payload(),
-                headers=get_headers(),
-                timeout=7
-            )
+    while True:
+        try:
+                delay = random.uniform(0.5, 2)
+                logger.info(f"Waiting {delay:.2f} seconds before request...")
+                time.sleep(delay)
+                response = requests.post(
+                    url,
+                    json=get_job_payload(),
+                    headers=get_headers(),
+                    timeout=7
+                )
 
-            logger.info(f"Status Code: {response.status_code}")
+                logger.info(f"Status Code: {response.status_code}")
 
-            if response.status_code == 200:
-                resp = response.json()
-                data = resp.get("data", None)
-                pro = data.get("pro", None)
-                pro_job = pro.get("proJobRoundConnection", None)
-                edges = pro_job.get("edges", None)
-                if edges:
-                    for edge in edges:
-                        job_id = edge.get("proJobRound", None).get("id")
-                        if job_id:
-                            get_job_details_request(job_id, chat_id)
-                        else:
-                            logger.info(f"No job_id - {job_id}")
+                if response.status_code == 200:
+                    resp = response.json()
+                    data = resp.get("data", None)
+                    pro = data.get("pro", None)
+                    pro_job = pro.get("proJobRoundConnection", None)
+                    edges = pro_job.get("edges", None)
+                    if edges:
+                        for edge in edges:
+                            job_id = edge.get("proJobRound", None).get("id")
+                            if job_id:
+                                get_job_details_request(job_id, chat_id)
+                            else:
+                                logger.info(f"No job_id - {job_id}")
+                    else:
+                        logger.info(f"No edges - {edges}")
+
+                    logger.info("\nResponse JSON:")
+                    logger.info(json.dumps(response.json(), indent=2))
                 else:
-                    logger.info(f"No edges - {edges}")
+                    logger.info(f"\nError Response: {response.text}")
 
-                logger.info("\nResponse JSON:")
-                logger.info(json.dumps(response.json(), indent=2))
-            else:
-                logger.info(f"\nError Response: {response.text}")
-
-    except requests.exceptions.RequestException as e:
-        logger.info(f"Request failed: {e}")
-        return None
+        except requests.exceptions.RequestException as e:
+            logger.info(f"make_wayfair_request - Request failed: {e}")
+            time.sleep(30)
+            continue
 
 
 def claim_job(round_job_id, job_date, chat_id):
@@ -189,7 +190,7 @@ def claim_job(round_job_id, job_date, chat_id):
         return response
 
     except requests.exceptions.RequestException as e:
-        logger.info(f"Request failed: {e}")
+        logger.info(f"claim_job - Request failed: {e}")
 
 
 def send_telegram_message(message, chat_id):

@@ -253,7 +253,7 @@ class Command(BaseCommand):
                     [
                         "poetry", "run", "python", "clicker.py",
                         "--token", token.token,
-                        "--chat_id", str(chat_id)
+                        "--chat_id", str(chat_id),
                     ],
                     stdout=log_file,
                     stderr=log_file,

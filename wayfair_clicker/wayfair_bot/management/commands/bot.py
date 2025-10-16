@@ -119,8 +119,6 @@ class Command(BaseCommand):
                 # Сохраняем в базу
                 save_token_to_db(self, user_id, token_data)
 
-                # Удаляем временный файл
-                import os
                 os.remove(temp_filename)
 
                 self.bot.reply_to(message, "✅ Данные успешно сохранены!")

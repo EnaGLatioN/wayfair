@@ -1,11 +1,10 @@
-import logging
 import subprocess
 import os
 import signal
 import sys
 import django
 from django.core.management.base import BaseCommand
-
+from logger import setup_logger
 import telebot
 from telebot.types import ReplyKeyboardRemove
 from decouple import config
@@ -26,6 +25,7 @@ class Command(BaseCommand):
         self.bot = telebot.TeleBot(config("TELE_TOKEN", cast=str))
         self.user_states = {}
         self.setup_handlers()
+        self.logger = setup_logger()
 
     def setup_handlers(self):
         """Настройка обработчиков сообщений"""
@@ -34,7 +34,7 @@ class Command(BaseCommand):
         def send_welcome(message):
             """Главное меню бота"""
             user_id = message.from_user.id
-            print(f"USER ID пользователя: {user_id}")
+            self.logger.info(f"USER ID пользователя: {user_id}")
             User.objects.get_or_create(
                 telegram_id=user_id
             )
@@ -265,7 +265,7 @@ class Command(BaseCommand):
                 )
                 user.process = process
                 user.save()
-                logging.info(f"Процесс запущен. PID: {active_process.pid}")
+                self.logger.info(f"Процесс запущен. PID: {active_process.pid}")
 
                 self.bot.send_message(
                     chat_id,
@@ -273,7 +273,7 @@ class Command(BaseCommand):
                 )
 
         except Exception as e:
-            logging.error(f"Ошибка при запуске команды: {e}")
+            self.logger.error(f"Ошибка при запуске команды: {e}")
             self.bot.send_message(chat_id, f"❌ Ошибка при запуске процесса: {e}")
 
     def handle(self, *args, **options):
@@ -283,9 +283,9 @@ class Command(BaseCommand):
 
     def start_bot(self):
         """Запуск polling бота"""
-        # while True:
-        #     try:
-        self.bot.polling(none_stop=True)
-            # except Exception as e:
-            #     self.stderr.write(f"Ошибка: {e}")
-            #     continue
+        while True:
+            try:
+                self.bot.polling(none_stop=True)
+            except Exception as e:
+                self.stderr.write(f"Ошибка: {e}")
+                continue

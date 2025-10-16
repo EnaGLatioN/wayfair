@@ -5,8 +5,9 @@ import random
 import argparse
 from decouple import config as cnf
 from datetime import datetime, timedelta
+from logger import setup_logger
 
-
+logger = setup_logger()
 RESPONSE_FILE = "wayfair_responses.json"
 IDS = []
 
@@ -81,7 +82,7 @@ def get_job_details_request(round_job_id, chat_id):
             timeout=5
         )
 
-        print(f"Status Code: {response.status_code}")
+        logger.info(f"Status Code: {response.status_code}")
 
         if response.status_code == 200:
             resp = response.json()
@@ -97,15 +98,15 @@ def get_job_details_request(round_job_id, chat_id):
                     result_string = f"{date_service} {random_time}.0000-0700"
                     claim_job(round_job_id, result_string, chat_id)
             else:
-                print(f"No edges - {edges}")
+                logger.info(f"No edges - {edges}")
 
-            print("\nResponse JSON:")
-            print(json.dumps(response.json(), indent=2))
+            logger.info("\nResponse JSON:")
+            logger.info(json.dumps(response.json(), indent=2))
         else:
-            print(f"\nError Response: {response.text}")
+            logger.info(f"\nError Response: {response.text}")
             
     except requests.exceptions.RequestException as e:
-        print(f"Request failed: {e}")
+        logger.info(f"Request failed: {e}")
         return None
 
 
@@ -114,7 +115,7 @@ def make_wayfair_request(chat_id):
     try:
         while True:
             delay = random.uniform(0.5, 3)
-            print(f"Waiting {delay:.2f} seconds before request...")
+            logger.info(f"Waiting {delay:.2f} seconds before request...")
             time.sleep(delay)
             response = requests.post(
                 url,
@@ -123,7 +124,7 @@ def make_wayfair_request(chat_id):
                 timeout=7
             )
 
-            print(f"Status Code: {response.status_code}")
+            logger.info(f"Status Code: {response.status_code}")
 
             if response.status_code == 200:
                 resp = response.json()
@@ -137,17 +138,17 @@ def make_wayfair_request(chat_id):
                         if job_id:
                             get_job_details_request(job_id, chat_id)
                         else:
-                            print(f"No job_id - {job_id}")
+                            logger.info(f"No job_id - {job_id}")
                 else:
-                    print(f"No edges - {edges}")
+                    logger.info(f"No edges - {edges}")
 
-                print("\nResponse JSON:")
-                print(json.dumps(response.json(), indent=2))
+                logger.info("\nResponse JSON:")
+                logger.info(json.dumps(response.json(), indent=2))
             else:
-                print(f"\nError Response: {response.text}")
+                logger.info(f"\nError Response: {response.text}")
 
     except requests.exceptions.RequestException as e:
-        print(f"Request failed: {e}")
+        logger.info(f"Request failed: {e}")
 
         # Сохраняем информацию об ошибке в тот же файл
         error_data = {
@@ -172,7 +173,7 @@ def claim_job(round_job_id, job_date, chat_id):
             timeout=7
         )
 
-        print(f"Status Code: {response.status_code}")
+        logger.info(f"Status Code: {response.status_code}")
 
         if response.status_code == 200:
             resp = response.json()
@@ -188,17 +189,17 @@ def claim_job(round_job_id, job_date, chat_id):
                     chat_id=chat_id
                 )
             else:
-                print(f"Fail status - {status}")
+                logger.info(f"Fail status - {status}")
 
-            print("\nResponse JSON:")
-            print(json.dumps(response.json(), indent=2))
+            logger.info("\nResponse JSON:")
+            logger.info(json.dumps(response.json(), indent=2))
         else:
-            print(f"\nError Response: {response.text}")
+            logger.info(f"\nError Response: {response.text}")
 
         return response
 
     except requests.exceptions.RequestException as e:
-        print(f"Request failed: {e}")
+        logger.info(f"Request failed: {e}")
 
 
 
@@ -212,15 +213,15 @@ def send_telegram_message(message, chat_id):
         }
         response = requests.post(f'https://api.telegram.org/bot{cnf("TELE_TOKEN", cast=str, default="8407176850:AAF3qq3LQl2WR_cjOHmodOh9pKVvd2uFU_g")}/sendMessage', json=payload)
         if response.status_code != 200:
-            print(f"Ошибка отправки уведомления в чат {chat_id}: {response.text}")
+            logger.info(f"Ошибка отправки уведомления в чат {chat_id}: {response.text}")
         else:
-            print(f"Уведомление отправлено в чат {chat_id}")
+            logger.info(f"Уведомление отправлено в чат {chat_id}")
     except Exception as e:
-        print(f"Ошибка в send_telegram_message: {str(e)}")
+        logger.info(f"Ошибка в send_telegram_message: {str(e)}")
 
 
 def main(args):
-    print(f"АРГУМЕНТЫ СТАРТА БОТА--{args}")
+    logger.info(f"АРГУМЕНТЫ СТАРТА БОТА--{args}")
     make_wayfair_request(args.chat_id)
 
 

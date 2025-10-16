@@ -12,7 +12,7 @@ from logger import setup_logger
 
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'your_project_name.settings')  # замените на ваше имя проекта
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wayfair_clicker.settings')
 django.setup()
 
 from wayfair_bot.models import Token

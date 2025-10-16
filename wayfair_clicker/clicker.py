@@ -230,13 +230,13 @@ def main(args):
 
 def get_tocken(tocken_id):
     try:
-        tocken = Token.objects.get(
+        token = Token.objects.get(
             id=tocken_id
         )
     except Token.DoesNotExist:
         logger.error(f"get_tocken - Токен не найден")
-        return None
-    return tocken
+        raise Token.DoesNotExist
+    return token
 
 
 if __name__ == "__main__":

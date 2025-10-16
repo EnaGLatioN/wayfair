@@ -86,7 +86,7 @@ class Command(BaseCommand):
         🤖 Добро пожаловать в Wayfair Bot!
 
         Доступные команды:
-        /token - Добавить новый токен (отправит шаблон для заполнения)
+        /del_token - Удалить не нужный токен
         /run - Запустить процесс с токеном
         /stop - Остановить активный процесс
         /status - Статус текущих процессов
@@ -153,9 +153,7 @@ class Command(BaseCommand):
                 user = User.objects.get(telegram_id=user_id)
 
                 # Создаем или обновляем токен через связь tg_token
-                if user.tg_token:
-                    # Обновляем существующий токен
-                    token = user.tg_token
+                if token := user.tg_token:
                     for field, value in token_data.items():
                         if hasattr(token, field):
                             setattr(token, field, value)
@@ -179,7 +177,7 @@ class Command(BaseCommand):
             help_text = """
                 📋 Справка по командам:
                 
-        /token - Добавить новый API токен
+        /del_token - Удалить не нужный токен
         /run <id_токена> - Запустить процесс с указанным токеном
         /stop - Остановить все активные процессы
         /status - Показать статус текущих процессов
@@ -188,28 +186,37 @@ class Command(BaseCommand):
             """
             self.bot.reply_to(message, help_text)
 
-        @self.bot.message_handler(commands=['token'])
+        @self.bot.message_handler(commands=['del_token'])
         def request_token(message):
             """Запрос токена у пользователя"""
-            chat_id = message.chat.id
-            user_id = message.from_user.id
-            try:
-                user = User.objects.get(
-                    telegram_id=user_id
-                )
-            except Exception as e:
-                self.bot.reply_to(message, f"❌ Вы не зарегестрированный пользователь напиши /start: {e}")
-                return
-            if user.tg_token:
-                self.bot.reply_to(message, f"❌ У вас уже есть добавленный токен пиши  /list_tokens")
-            else:
-                self.user_states[chat_id] = "waiting_for_token"
 
-                self.bot.send_message(
-                    chat_id,
-                    "Пожалуйста, введите ваш токен:",
-                    reply_markup=ReplyKeyboardRemove()
-                )
+            command_parts = message.text.split("=")
+            try:
+                token_id = command_parts[1].strip()
+                token = Token.objects.get(id=token_id)
+                token.delete()
+                self.bot.reply_to(message, "✅ Токен удален")
+            except Token.DoesNotExist:
+                self.bot.reply_to(message, "❌ Токен с указанным ID не найден")
+            except Exception as e:
+                self.bot.reply_to(message, f"❌ Ошибка при запуске: {e}")
+            # try:
+            #     user = User.objects.get(
+            #         telegram_id=user_id
+            #     )
+            # except Exception as e:
+            #     self.bot.reply_to(message, f"❌ Вы не зарегестрированный пользователь напиши /start: {e}")
+            #     return
+            # if user.tg_token:
+            #     self.bot.reply_to(message, f"❌ У вас уже есть добавленный токен пиши  /list_tokens")
+            # else:
+            #     self.user_states[chat_id] = "waiting_for_token"
+            #
+            #     self.bot.send_message(
+            #         chat_id,
+            #         "Пожалуйста, введите ваш токен:",
+            #         reply_markup=ReplyKeyboardRemove()
+            #     )
 
         @self.bot.message_handler(commands=['list_tokens'])
         def list_tokens(message):
@@ -405,9 +412,9 @@ class Command(BaseCommand):
 
     def start_bot(self):
         """Запуск polling бота"""
-        # while True:
-        #     try:
-        self.bot.polling(none_stop=True)
-            # except Exception as e:
-            #     self.stderr.write(f"Ошибка: {e}")
-            #     continue
+        while True:
+            try:
+                self.bot.polling(none_stop=True)
+            except Exception as e:
+                self.stderr.write(f"Ошибка: {e}")
+                continue

@@ -149,16 +149,6 @@ def make_wayfair_request(chat_id):
 
     except requests.exceptions.RequestException as e:
         logger.info(f"Request failed: {e}")
-
-        # Сохраняем информацию об ошибке в тот же файл
-        error_data = {
-            "timestamp": datetime.now().isoformat(),
-            "delay_seconds": round(delay, 2),
-            "error": str(e),
-            "status_code": None
-        }
-
-
         return None
 
 
@@ -200,7 +190,6 @@ def claim_job(round_job_id, job_date, chat_id):
 
     except requests.exceptions.RequestException as e:
         logger.info(f"Request failed: {e}")
-
 
 
 def send_telegram_message(message, chat_id):

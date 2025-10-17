@@ -148,9 +148,10 @@ def make_wayfair_request(chat_id):
                     logger.info(edges)
                     if edges:
                         for edge in edges:
-                            job_id = edge.get("proJobRound", None).get("id")
+                            pro_job = edge.get("proJobRound", None)
+                            job_id = pro_job.get("id")
                             if job_id:
-                                amaunt_flag = take_amaunt(job_id)
+                                amaunt_flag = take_amaunt(pro_job)
                                 if amaunt_flag:
                                     get_job_details_request(job_id, chat_id)
                                 else:

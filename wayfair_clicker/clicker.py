@@ -172,12 +172,10 @@ def make_wayfair_request(chat_id):
 def take_amaunt(job_id):
     try:
         payments = job_id.get("payments", None)
-        if payments:
-            adjustments = payments.get("adjustments", None)
-            for adjustment in adjustments:
-                amaunt = adjustment.get("amount", None)
-                if amaunt and (amaunt >= cnf("NEEDED_PRICE", cast=int, default=82)):
-                    return True
+        for payment in payments:
+            amaunt = payment.get("total", None)
+            if amaunt and (amaunt >= cnf("NEEDED_PRICE", cast=int, default=82)):
+                return True
         return False
     except Exception as e:
         logger.error(f"take_amaunt - {e}")

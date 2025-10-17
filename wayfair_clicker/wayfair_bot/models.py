@@ -106,18 +106,3 @@ class User(Model):
         verbose_name = "user"
         verbose_name_plural = "user"
         ordering = ["-created_at"]
-
-
-class Order(Model):
-    id = UUIDField(
-        default=uuid4,
-        help_text="Уникальный идентификатор ",
-        primary_key=True,
-        verbose_name="ID",
-    )
-    order_id = BigIntegerField(
-        blank=True,
-        null=True,
-        help_text="Уникальный идентификатор TG",
-        default=0
-    )

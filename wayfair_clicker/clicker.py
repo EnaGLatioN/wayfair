@@ -1,3 +1,5 @@
+from email.policy import default
+
 import requests
 import json
 import time
@@ -148,7 +150,11 @@ def make_wayfair_request(chat_id):
                         for edge in edges:
                             job_id = edge.get("proJobRound", None).get("id")
                             if job_id:
-                                get_job_details_request(job_id, chat_id)
+                                amaunt_flag = take_amaunt(job_id)
+                                if amaunt_flag:
+                                    get_job_details_request(job_id, chat_id)
+                                else:
+                                    continue
                             else:
                                 logger.info(f"No job_id - {job_id}")
                     else:
@@ -160,6 +166,21 @@ def make_wayfair_request(chat_id):
             logger.info(f"make_wayfair_request - Request failed: {e}")
             time.sleep(30)
             continue
+
+
+def take_amaunt(job_id):
+    try:
+        payments = job_id.get("payments", None)
+        if payments:
+            adjustments = payments.get("adjustments", None)
+            for adjustment in adjustments:
+                amaunt = adjustment.get("amount", None)
+                if amaunt and (amaunt >= cnf("NEEDED_PRICE", cast=int, default=82)):
+                    return True
+        return False
+    except Exception as e:
+        logger.error(f"take_amaunt - {e}")
+        return False
 
 
 def claim_job(round_job_id, job_date, chat_id):
@@ -195,7 +216,7 @@ def claim_job(round_job_id, job_date, chat_id):
                 pro_job = pro.get("proJobRoundMutation", None)
                 logger.info(f"1111Status Code: {pro_job}")
 
-                job_change = pro_job.get("jobСhange", None)
+                job_change = pro_job.get("jobChange", None)
                 status = job_change.get("status")
                 logger.info(f"1111Status Code: {status}")
 

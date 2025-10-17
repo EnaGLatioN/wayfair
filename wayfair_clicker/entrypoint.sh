@@ -7,7 +7,7 @@ env | grep -E '^[A-Z0-9_]+' || echo "Нет переменных."
 
 # Массив команд, которые нужно запустить
 COMMANDS=(
-    "poetry run python manage.py migrate",
+    "poetry run python manage.py migrate"
     "poetry run python manage.py bot" # Главный процесс (логи идут в `docker logs`
 )
 

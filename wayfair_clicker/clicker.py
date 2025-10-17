@@ -124,7 +124,7 @@ def make_wayfair_request(chat_id):
     url = cnf("URL_WF", cast=str, default="https://www.wayfair.com/wayhome/graphql?queryHash=7632b54fcfa7cd10bec94e6cda6236bf&queryName=GetAvailableJobs")
     while True:
         try:
-                delay = random.uniform(0.2, 1.2)
+                delay = random.uniform(0, 1)
                 logger.info(f"Waiting {delay:.2f} seconds before request...")
                 time.sleep(delay)
                 response = requests.post(

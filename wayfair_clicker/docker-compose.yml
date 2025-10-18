@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
   restart: unless-stopped
   volumes:
-    - ./db.sqlite3:/app/db.sqlite3
+    - ./db.sqlite3:/application/db.sqlite3
   ports:
    - "8000:8000"
   networks:

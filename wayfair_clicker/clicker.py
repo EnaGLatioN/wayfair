@@ -156,7 +156,9 @@ def make_wayfair_request(chat_id):
                         logger.info(f"No edges - {edges}")
                 else:
                     logger.info(f"\nError Response: {response.text}")
-
+            else:
+                time.sleep(3)
+                logger.info(f"make_wayfair_request - Я сплю еще: {e}")
         except requests.exceptions.RequestException as e:
             logger.info(f"make_wayfair_request - Request failed: {e}")
             time.sleep(30)
